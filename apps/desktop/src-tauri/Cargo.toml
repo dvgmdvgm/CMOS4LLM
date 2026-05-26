@@ -9,8 +9,12 @@ tauri-build = { version = "2", features = [] }
 
 [dependencies]
 cmos-core = { path = "../../../crates/core" }
+cmos-memory = { path = "../../../crates/memory" }
+cmos-retrieval = { path = "../../../crates/retrieval" }
 tauri = { version = "2", features = [] }
+tokio.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true
+rusqlite.workspace = true
