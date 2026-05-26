@@ -11,11 +11,13 @@ use cmos_memory::l2l3::{EventStore, EventType, Layer};
 use cmos_memory::l4::ProjectMemory;
 use cmos_retrieval::{ContextAssembler, ContextQuery, EmbeddingClient, EmbeddingConfig, VectorIndex};
 
+use crate::analytics::TokenTracker;
 use crate::tools;
 
 pub struct CmosState {
     pub working_memory: WorkingMemory,
     pub data_root: PathBuf,
+    pub token_tracker: TokenTracker,
 }
 
 impl CmosState {
@@ -262,16 +264,47 @@ impl CmosHandler {
         let assembler = ContextAssembler::default();
         let es = self.state.event_store().ok();
         let pm = self.state.project_memory().ok();
+        let vi = self.state.vector_index();
 
-        // Use keyword-only assembly (synchronous, no Send issues with VectorIndex)
-        let result = assembler
-            .assemble(
-                &query,
-                Some(&self.state.working_memory),
-                es.as_ref(),
-                pm.as_ref(),
-            )
-            .map_err(|e| e.to_string())?;
+        let result = if let Some(ref vi) = vi {
+            let ec = self.state.embedding_client();
+            let query_embedding = ec
+                .embed_single(&query.task_description)
+                .await
+                .map_err(|e| e.to_string())?;
+
+            assembler
+                .assemble_hybrid_with_embedding(
+                    &query,
+                    Some(&self.state.working_memory),
+                    es.as_ref(),
+                    pm.as_ref(),
+                    vi,
+                    &query_embedding,
+                )
+                .map_err(|e| e.to_string())?
+        } else {
+            assembler
+                .assemble(
+                    &query,
+                    Some(&self.state.working_memory),
+                    es.as_ref(),
+                    pm.as_ref(),
+                )
+                .map_err(|e| e.to_string())?
+        };
+
+        // Baseline estimate: without CMOS, the full task description + all considered items
+        // would be sent raw. Conservative estimate: items_considered * avg_tokens_per_item.
+        let baseline_estimate = (result.items_considered as u64) * 200 + (params.task_description.len() as u64 / 4);
+        let assembled_tokens = result.total_tokens as u64;
+
+        self.state.token_tracker.record(
+            &params.project_id,
+            "assemble_context",
+            assembled_tokens,
+            baseline_estimate.max(assembled_tokens),
+        );
 
         Ok(serde_json::json!({
             "context": result.render_with_header(&params.task_description),

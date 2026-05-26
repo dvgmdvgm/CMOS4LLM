@@ -14,5 +14,11 @@ async-trait.workspace = true
 chrono.workspace = true
 rust-mcp-sdk.workspace = true
 
+rusqlite.workspace = true
+
 cmos-memory = { path = "../memory" }
 cmos-retrieval = { path = "../retrieval" }
+
+[dev-dependencies]
+serde_json.workspace = true
+tempfile = "3"

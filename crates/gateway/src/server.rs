@@ -8,12 +8,15 @@ use rust_mcp_sdk::{McpServer, StdioTransport, ToMcpServerHandler, TransportOptio
 
 use cmos_memory::l1::{WorkingMemory, WorkingMemoryConfig};
 
+use crate::analytics::TokenTracker;
 use crate::handler::{CmosHandler, CmosState};
 
 pub async fn start_mcp_server(data_root: PathBuf) -> SdkResult<()> {
+    let token_tracker = TokenTracker::new(&data_root);
     let state = Arc::new(CmosState {
         working_memory: WorkingMemory::new(WorkingMemoryConfig::default()),
         data_root,
+        token_tracker,
     });
 
     let server_info = InitializeResult {
