@@ -9,48 +9,45 @@
 
 ## Очередь работы (в порядке выполнения)
 
-### 1. ☐ Тестирование LM-фаз с Ollama
-
-- [ ] Запустить Ollama, убедиться что Gemma2 доступна.
-- [ ] Перезапустить bootstrap без `--skip-phases`: `cmos bootstrap --project marketplace --root D:\art_network_antigravity --no-interactive --resume`.
-- [ ] Проверить что фазы 4 (Convention Mining), 6 (Rejected Approaches), 7 (Docs Ingestion) отрабатывают.
-- [ ] Проверить качество LM-ответов (conventions, tech debt markers, doc facts).
-
-### 2. ☐ Unit tests для bootstrap pipeline
-
-- [ ] Создать `crates/bootstrap/tests/fixtures/` с синтетическими Django-файлами.
-- [ ] Unit tests для PythonExtractor (parse_file → correct RawNodes).
-- [ ] Unit tests для DjangoExtractor (classify_node → correct kinds).
-- [ ] Unit tests для GraphStore (insert/query/checkpoint).
-- [ ] Integration test: full pipeline на mini-Django fixture.
-
-### 3. ☐ CI pipeline (GitHub Actions)
-
-- [ ] `cargo clippy` + `cargo test` + `cargo build --release` на Windows runner.
-- [ ] Frontend: `pnpm install` + `pnpm build`.
-- [ ] Создать GitHub repo и push.
-
-### 4. ☐ MVP Milestone 2: Memory layers L1–L4
-
-- [ ] L1: in-memory prompt assembly buffer.
-- [ ] L2/L3: SQLite WAL event store (schema из ADR-016).
-- [ ] L4: интеграция с существующим GraphStore из bootstrap.
-- [ ] Promotion logic L2→L3, L3→L4.
-
-### 5. ☐ MVP Milestone 3: Two-LLM economy
+### 1. ☐ MVP Milestone 3: Two-LLM economy
 
 - [ ] Интеграция Ollama для runtime inference (не только bootstrap).
-- [ ] Background task queue (tokio channels).
-- [ ] Context assembly: retrieval из L4 graph → prompt для Cloud LLM.
+- [ ] Background task queue (tokio channels) для Sub-LM задач.
+- [ ] Context assembly: retrieval из L4 graph + L3 episodes → prompt для Cloud LLM.
+- [ ] CLI команда `cmos context` — показать собранный контекст для текущей задачи.
+
+### 2. ☐ Интеграция memory layers с CLI
+
+- [ ] `cmos memory stats` — показать L1/L2/L3/L4 статистику.
+- [ ] `cmos memory query --layer L3 --type decision` — поиск по event store.
+- [ ] `cmos memory promote` — ручной запуск promotion engine.
+- [ ] Автоматический append в L2 при каждом вызове `cmos bootstrap`.
+
+### 3. ☐ Vector index (LanceDB) для semantic retrieval
+
+- [ ] Интеграция LanceDB в crates/retrieval.
+- [ ] Embedding generation через Ollama (nomic-embed-text или similar).
+- [ ] Hybrid retrieval: vector similarity + graph traversal.
+
+### 4. ☐ MCP Server (ADR-010)
+
+- [ ] Реализовать MCP protocol handler в crates/gateway.
+- [ ] Expose memory layers через MCP tools.
+- [ ] Тестирование с Claude Desktop / Claude Code.
+
+### 5. ☐ CI improvements
+
+- [ ] Добавить caching для Cargo build в GitHub Actions.
+- [ ] Добавить badge в README.
 
 ---
 
 ## Если ты только что открыл этот файл
 
-- MVP M1 (Bootstrap pipeline) полностью реализован и работает.
-- Pipeline извлекает ~5000 nodes из реального Django-проекта за 25 секунд.
-- LM-фазы (Ollama) ещё не тестировались — нужно запустить Ollama.
-- Следующий шаг — тесты или сразу M2 (memory layers).
+- MVP M1 (Bootstrap) и M2 (Memory layers) полностью реализованы.
+- GitHub repo: `dvgmdvgm/CMOS4LLM`, CI настроен.
+- Следующий шаг — M3 (Two-LLM economy): runtime inference + context assembly.
+- Memory layers работают изолированно, но ещё не интегрированы с CLI.
 
 ---
 
