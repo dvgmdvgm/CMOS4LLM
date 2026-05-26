@@ -56,9 +56,21 @@ impl HybridRetriever {
         budget_tokens: usize,
     ) -> Result<Vec<HybridResult>, RetrievalError> {
         let query_embedding = embedding_client.embed_single(query).await?;
+        self.retrieve_l4_with_embedding(query, project_id, vector_index, &query_embedding, project_memory, budget_tokens)
+    }
 
+    #[allow(clippy::too_many_arguments)]
+    pub fn retrieve_l4_with_embedding(
+        &self,
+        _query: &str,
+        project_id: &str,
+        vector_index: &VectorIndex,
+        query_embedding: &[f32],
+        project_memory: &ProjectMemory,
+        budget_tokens: usize,
+    ) -> Result<Vec<HybridResult>, RetrievalError> {
         let vector_results = vector_index
-            .search(&query_embedding, self.config.vector_candidates, Some("L4"))?;
+            .search(query_embedding, self.config.vector_candidates, Some("L4"))?;
 
         let all_facts = {
             let kinds = ["decision", "policy", "convention", "lesson", "constraint"];
@@ -87,9 +99,22 @@ impl HybridRetriever {
         budget_tokens: usize,
     ) -> Result<Vec<HybridResult>, RetrievalError> {
         let query_embedding = embedding_client.embed_single(query).await?;
+        self.retrieve_l3_with_embedding(query, project_id, session_id, vector_index, &query_embedding, event_store, budget_tokens)
+    }
 
+    #[allow(clippy::too_many_arguments)]
+    pub fn retrieve_l3_with_embedding(
+        &self,
+        _query: &str,
+        project_id: &str,
+        session_id: Option<&str>,
+        vector_index: &VectorIndex,
+        query_embedding: &[f32],
+        event_store: &EventStore,
+        budget_tokens: usize,
+    ) -> Result<Vec<HybridResult>, RetrievalError> {
         let vector_results = vector_index
-            .search(&query_embedding, self.config.vector_candidates, Some("L3"))?;
+            .search(query_embedding, self.config.vector_candidates, Some("L3"))?;
 
         let events = if let Some(sid) = session_id {
             event_store.query_by_session(project_id, sid)?

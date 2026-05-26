@@ -129,8 +129,29 @@ impl ContextAssembler {
             return self.assemble(query, l1, event_store, project_memory);
         }
 
-        let vi = vector_index.unwrap();
         let ec = embedding_client.unwrap();
+        let query_embedding = ec.embed_single(&query.task_description).await?;
+
+        self.assemble_hybrid_with_embedding(
+            query,
+            l1,
+            event_store,
+            project_memory,
+            vector_index.unwrap(),
+            &query_embedding,
+        )
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub fn assemble_hybrid_with_embedding(
+        &self,
+        query: &ContextQuery,
+        l1: Option<&WorkingMemory>,
+        event_store: Option<&EventStore>,
+        project_memory: Option<&ProjectMemory>,
+        vector_index: &VectorIndex,
+        query_embedding: &[f32],
+    ) -> Result<AssembledContext, RetrievalError> {
         let hybrid = HybridRetriever::new(HybridConfig::default());
 
         let mut sections = Vec::new();
@@ -143,9 +164,14 @@ impl ContextAssembler {
         let l1_budget = (query.max_tokens as f64 * self.l1_budget_ratio) as usize;
 
         if query.include_l4 && let Some(pm) = project_memory {
-            let results = hybrid
-                .retrieve_l4(&query.task_description, &query.project_id, vi, ec, pm, l4_budget)
-                .await?;
+            let results = hybrid.retrieve_l4_with_embedding(
+                &query.task_description,
+                &query.project_id,
+                vector_index,
+                query_embedding,
+                pm,
+                l4_budget,
+            )?;
             items_considered += results.len();
             if !results.is_empty() {
                 let mut content = String::new();
@@ -168,17 +194,15 @@ impl ContextAssembler {
         }
 
         if query.include_l3 && let Some(es) = event_store {
-            let results = hybrid
-                .retrieve_l3(
-                    &query.task_description,
-                    &query.project_id,
-                    query.session_id.as_deref(),
-                    vi,
-                    ec,
-                    es,
-                    l3_budget,
-                )
-                .await?;
+            let results = hybrid.retrieve_l3_with_embedding(
+                &query.task_description,
+                &query.project_id,
+                query.session_id.as_deref(),
+                vector_index,
+                query_embedding,
+                es,
+                l3_budget,
+            )?;
             items_considered += results.len();
             if !results.is_empty() {
                 let mut content = String::new();

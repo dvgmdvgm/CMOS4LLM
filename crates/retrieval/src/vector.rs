@@ -1,4 +1,5 @@
 use std::path::Path;
+use std::sync::Mutex;
 
 use rusqlite::{params, Connection as SqliteConn};
 use usearch::{Index, IndexOptions, MetricKind, ScalarKind};
@@ -7,9 +8,9 @@ use crate::error::RetrievalError;
 
 pub struct VectorIndex {
     index: Index,
-    meta_db: SqliteConn,
+    meta_db: Mutex<SqliteConn>,
     dimension: usize,
-    next_key: u64,
+    next_key: Mutex<u64>,
 }
 
 #[derive(Debug, Clone)]
@@ -86,9 +87,9 @@ impl VectorIndex {
 
         Ok(Self {
             index,
-            meta_db,
+            meta_db: Mutex::new(meta_db),
             dimension,
-            next_key,
+            next_key: Mutex::new(next_key),
         })
     }
 
@@ -129,28 +130,30 @@ impl VectorIndex {
 
         Ok(Self {
             index,
-            meta_db,
+            meta_db: Mutex::new(meta_db),
             dimension,
-            next_key: 1,
+            next_key: Mutex::new(1),
         })
     }
 
-    pub fn upsert(&mut self, records: &[VectorRecord]) -> Result<(), RetrievalError> {
+    pub fn upsert(&self, records: &[VectorRecord]) -> Result<(), RetrievalError> {
         if records.is_empty() {
             return Ok(());
         }
 
+        let mut next_key = self.next_key.lock().unwrap();
+        let db = self.meta_db.lock().unwrap();
+
         let current_capacity = self.index.capacity();
-        let needed = self.next_key as usize + records.len();
+        let needed = *next_key as usize + records.len();
         if needed > current_capacity {
             self.index
                 .reserve(needed.max(current_capacity * 2))
                 .map_err(|e| RetrievalError::VectorIndex(format!("reserve failed: {}", e)))?;
         }
 
-        let tx = self
-            .meta_db
-            .transaction()
+        let tx = db
+            .unchecked_transaction()
             .map_err(|e| RetrievalError::VectorIndex(format!("transaction failed: {}", e)))?;
 
         for record in records {
@@ -181,8 +184,8 @@ impl VectorIndex {
                 .map_err(|e| RetrievalError::VectorIndex(format!("update failed: {}", e)))?;
                 k
             } else {
-                let k = self.next_key;
-                self.next_key += 1;
+                let k = *next_key;
+                *next_key += 1;
                 tx.execute(
                     "INSERT INTO vector_meta (key, id, source_id, layer, content) VALUES (?1, ?2, ?3, ?4, ?5)",
                     params![k, record.id, record.source_id, record.layer, record.content],
@@ -223,10 +226,11 @@ impl VectorIndex {
             .search(query_vector, fetch_count)
             .map_err(|e| RetrievalError::VectorIndex(format!("search failed: {}", e)))?;
 
+        let db = self.meta_db.lock().unwrap();
         let mut search_results = Vec::with_capacity(limit);
 
         for (key, distance) in results.keys.iter().zip(results.distances.iter()) {
-            let row = self.meta_db.query_row(
+            let row = db.query_row(
                 "SELECT id, source_id, layer, content FROM vector_meta WHERE key = ?1",
                 params![key],
                 |r| {
@@ -301,7 +305,7 @@ mod tests {
 
     #[test]
     fn test_upsert_and_count() {
-        let mut index = VectorIndex::open_in_memory(8).unwrap();
+        let index = VectorIndex::open_in_memory(8).unwrap();
         let records = vec![
             make_record("r1", 1, "L3", "first episode", 8),
             make_record("r2", 2, "L4", "a decision fact", 8),
@@ -312,7 +316,7 @@ mod tests {
 
     #[test]
     fn test_search_basic() {
-        let mut index = VectorIndex::open_in_memory(4).unwrap();
+        let index = VectorIndex::open_in_memory(4).unwrap();
         let records = vec![
             VectorRecord {
                 id: "a".into(),
@@ -345,7 +349,7 @@ mod tests {
 
     #[test]
     fn test_search_with_layer_filter() {
-        let mut index = VectorIndex::open_in_memory(4).unwrap();
+        let index = VectorIndex::open_in_memory(4).unwrap();
         let records = vec![
             VectorRecord {
                 id: "a".into(),
@@ -371,7 +375,7 @@ mod tests {
 
     #[test]
     fn test_upsert_updates_existing() {
-        let mut index = VectorIndex::open_in_memory(4).unwrap();
+        let index = VectorIndex::open_in_memory(4).unwrap();
         let records = vec![VectorRecord {
             id: "a".into(),
             source_id: 1,
@@ -398,7 +402,7 @@ mod tests {
 
     #[test]
     fn test_dimension_mismatch_error() {
-        let mut index = VectorIndex::open_in_memory(4).unwrap();
+        let index = VectorIndex::open_in_memory(4).unwrap();
         let records = vec![VectorRecord {
             id: "a".into(),
             source_id: 1,

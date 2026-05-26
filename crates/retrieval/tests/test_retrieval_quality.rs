@@ -94,7 +94,7 @@ fn build_corpus() -> SyntheticCorpus {
     }
 
     let dim = 8;
-    let mut vi = VectorIndex::open_in_memory(dim).unwrap();
+    let vi = VectorIndex::open_in_memory(dim).unwrap();
 
     let mut records: Vec<VectorRecord> = Vec::new();
 
