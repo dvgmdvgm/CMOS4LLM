@@ -6,40 +6,40 @@
 ---
 
 **Дата последнего обновления:** 2026-05-26
-**Текущая фаза:** Documentation phase — ~95% (architecture + все скелеты готовы; осталось ADR-011..016)
+**Текущая фаза:** Documentation phase — 100% COMPLETE. Ready for implementation.
 **Кто работал:** owner + Opus 4.6
 
 ---
 
 ## Что сделано в последнюю сессию
 
-1. **Написан `docs/01-architecture.md`** — мастер-документ архитектуры на английском:
-   - System overview, component map (Mermaid), memory hierarchy, inference pipeline (sequence diagram), 12 token reduction techniques, Project DNA & Policy Engine, observability & time travel, integration architecture, bootstrap pipeline, cross-reference index (ADR→component, scope→architecture), NFRs, security.
-2. **Созданы скелеты `docs/04-components/`** (8 файлов):
-   - `gateway.md`, `cognitive-hypervisor.md`, `retrieval-router.md`, `memory-layers.md`, `policy-engine.md`, `sub-lm-runtime.md`, `observability.md`, `bootstrap-pipeline.md`.
-3. **Созданы скелеты `docs/05-gui/`** (12 файлов):
-   - `dashboard.md`, `live-inspector.md`, `memory-browser.md`, `knowledge-graph.md`, `dna-editor.md`, `drift-monitor.md`, `token-analytics.md`, `episodes-browser.md`, `policy-manager.md`, `cognitive-trace-overlay.md`, `design-system.md`, `theming.md`.
-4. **Создан `docs/06-bootstrap/django-marketplace.md`** — детальный pipeline для 400K LoC Django.
-5. **Созданы скелеты `docs/07-research/`** (6 файлов):
-   - `kv-cache-persistence.md`, `lora-as-memory.md`, `neurosymbolic.md`, `latent-persistence.md`, `external-attention.md`, `distributed-cognition.md`.
+1. **Написаны ADR-011..016** — выбор стека:
+   - ADR-011: Rust как язык core daemon.
+   - ADR-012: SQLite + recursive CTEs как graph store для L4.
+   - ADR-013: LanceDB как vector index для L3/L4.
+   - ADR-014: llama-cpp-2 как Sub-LM runtime.
+   - ADR-015: Tauri 2.x + React + TypeScript для GUI.
+   - ADR-016: SQLite WAL как event storage для L2/L3.
+2. **Git init выполнен** — initial commit (66 files, 4769 lines), лицензия MIT.
+3. **Закрыт ROADBLOCKS Q8** — лицензия MIT.
 
 ## Что НЕ сделано (ждёт следующей сессии)
 
-- Технологические ADR-011..ADR-016 (выбор стека: язык, graph DB, vector index, Sub-LM runtime, GUI shell, storage backend).
-- Git init + стартовая структура исходников.
+- Стартовая структура исходников (Cargo workspace, Tauri app scaffold).
+- CI pipeline (GitHub Actions).
 - MVP Milestone 1: Bootstrap pipeline (первый исполнимый код).
 
 ## Где мы в roadmap
 
-- **Documentation phase:** ~95% (charter ✓, ADR-001..010 ✓, scope ✓, glossary ✓, architecture ✓, component skeletons ✓, GUI skeletons ✓, bootstrap spec ✓, research skeletons ✓; осталось: ADR-011..016 по стеку).
-- **MVP implementation:** не начато.
+- **Documentation phase:** 100% ✓ (charter, ADR-001..016, scope, glossary, architecture, components, GUI, bootstrap, research — всё готово).
+- **MVP implementation:** не начато. Следующий шаг — scaffold Cargo workspace + Tauri app.
 
 ## Ключевые контекстные факты
 
 - Owner — разработчик Django-marketplace ~400K LoC. CMOS будет применяться к этому проекту первым.
+- Стек зафиксирован: Rust, SQLite (graph + events), LanceDB (vectors), llama-cpp-2 (Sub-LM), Tauri 2.x + React + TS (GUI).
+- Git repo инициализирован, initial commit сделан. Лицензия MIT.
 - Wake-up resilience — главное правило: документация спроектирована так, что любое окно чата восстанавливает контекст за 5 минут.
-- Авто-протоколы: на первое сообщение Claude обязан прочитать STATUS+NEXT+последний conversation-log и доложить. На триггер-фразы — сразу за работу. На завершение задачи / `сохраняемся` — обязательный sleep-ритуал.
-- Язык документации: charter и conversation-log на русском; spec и ADR — на английском.
 
 ---
 

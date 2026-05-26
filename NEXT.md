@@ -9,41 +9,47 @@
 
 ## Очередь работы (в порядке выполнения)
 
-### 1. ☐ Технические ADR (выбор стека)
+### 1. ☐ Scaffold Cargo workspace + Tauri app
 
-Architecture.md закрыл «что», теперь ADR-011..016 закроют «чем».
-- [ ] ADR-011: Backend язык (Rust vs Go) для core daemon.
-- [ ] ADR-012: Graph DB для L4 (Kuzu vs Memgraph vs CozoDB embedded).
-- [ ] ADR-013: Vector index (Qdrant vs Lance vs hnswlib).
-- [ ] ADR-014: Sub-LM runtime (llama.cpp vs vLLM vs MLX, выбор моделей).
-- [ ] ADR-015: GUI shell (Tauri 2.x), frontend stack.
-- [ ] ADR-016: Storage backend для L2/L3 event log (RocksDB vs SQLite vs custom).
+- [ ] Создать `Cargo.toml` (workspace) с crates: `core`, `memory`, `sub-lm`, `gateway`, `policy`, `retrieval`, `cli`.
+- [ ] Создать `apps/desktop/` с Tauri 2.x scaffold (React + TypeScript + Vite).
+- [ ] Минимальный `Hello World` — daemon запускается, Tauri окно открывается.
+- [ ] `.cargo/config.toml` для Windows-специфичных настроек (linker, target).
 
-### 2. ☐ Стартовый репозиторий + CI
+### 2. ☐ CI pipeline (GitHub Actions)
 
-- [ ] `git init` в `D:\AI Projects\CMOS\`.
-- [ ] Базовая структура исходников (`crates/` для Rust core, `apps/desktop` для Tauri, `apps/web` для standalone web GUI).
-- [ ] CI pipeline (GitHub Actions): lint + test + build на каждом push.
+- [ ] `cargo clippy` + `cargo test` + `cargo build --release` на Windows runner.
+- [ ] Frontend: `npm ci` + `npm run lint` + `npm run build`.
+- [ ] Создать GitHub repo и push.
 
-### 3. ☐ MVP Milestone 1: Bootstrap-pipeline для Django marketplace
+### 3. ☐ MVP Milestone 1: Bootstrap pipeline для Django marketplace
 
-После того как scope зафиксирован и стек выбран — **первый исполнимый код**: статический анализ Django-проекта → построение L4 symbol graph + domain ontology.
+Первый исполнимый код: статический анализ Django-проекта → построение L4 symbol graph + domain ontology.
+- [ ] Python AST parser (вызывается из Rust через `tree-sitter-python` или subprocess).
+- [ ] Django-specific extractors (models, views, urls, signals).
+- [ ] SQLite schema для L4 graph (nodes + edges tables).
+- [ ] CLI: `cmos bootstrap --project marketplace --root <path>`.
 
 ### 4. ☐ MVP Milestone 2: Memory layers L1–L4
 
-Реализация хранилищ по выбранному стеку (ADR-012..016). Promotion logic, tombstones, persistence across restarts.
+- [ ] L1: in-memory prompt assembly buffer.
+- [ ] L2/L3: SQLite WAL event store (schema из ADR-016).
+- [ ] L4: SQLite graph (schema из ADR-012) + LanceDB vectors.
+- [ ] Promotion logic L2→L3, L3→L4.
 
 ### 5. ☐ MVP Milestone 3: Two-LLM economy
 
-Sub-LM Runtime: пул одной локальной модели, background queue, fallback to Haiku.
+- [ ] llama-cpp-2 integration: load GGUF model, run classification task.
+- [ ] Background task queue (tokio channels).
+- [ ] Fallback to Haiku API when no GPU.
 
 ---
 
 ## Если ты только что открыл этот файл
 
-- Если шаги выглядят знакомо и понятно → бери шаг 1 и работай.
-- Если потерялся в архитектуре → возвращайся к [docs/01-architecture.md](./docs/01-architecture.md) → последний conversation-log в `docs/09-conversation-log/`.
-- Если есть открытые вопросы — они в [ROADBLOCKS.md](./ROADBLOCKS.md), их надо решить **до** начала имплементации.
+- Документация завершена на 100%. Все ADR приняты. Стек зафиксирован.
+- Следующий шаг — **код**. Начинаем с scaffold (пункт 1).
+- Открытые вопросы в [ROADBLOCKS.md](./ROADBLOCKS.md) не блокируют начало имплементации (Q1 про GPU решится при первом запуске Sub-LM).
 
 ---
 
