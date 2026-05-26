@@ -9,45 +9,43 @@
 
 ## Очередь работы (в порядке выполнения)
 
-### 1. ☐ MVP Milestone 3: Two-LLM economy
+### 1. ☐ Push all uncommitted changes на GitHub
 
-- [ ] Интеграция Ollama для runtime inference (не только bootstrap).
-- [ ] Background task queue (tokio channels) для Sub-LM задач.
-- [ ] Context assembly: retrieval из L4 graph + L3 episodes → prompt для Cloud LLM.
-- [ ] CLI команда `cmos context` — показать собранный контекст для текущей задачи.
+- [ ] Commit всех новых и изменённых файлов (M5 GUI + Token Analytics + portable build).
+- [ ] Push на main.
+- [ ] Убедиться что CI green.
 
-### 2. ☐ Интеграция memory layers с CLI
+### 2. ☐ Token Analytics — baseline measurement
 
-- [ ] `cmos memory stats` — показать L1/L2/L3/L4 статистику.
-- [ ] `cmos memory query --layer L3 --type decision` — поиск по event store.
-- [ ] `cmos memory promote` — ручной запуск promotion engine.
-- [ ] Автоматический append в L2 при каждом вызове `cmos bootstrap`.
+- [ ] Запустить CMOS MCP server + Claude на реальном проекте (Django marketplace).
+- [ ] Собрать данные: tokens assembled vs baseline estimate за 10+ запросов.
+- [ ] Проверить, что savings ratio отображается в GUI корректно.
+- [ ] Задокументировать результат в README (секция "Benchmarks").
 
-### 3. ☐ Vector index (LanceDB) для semantic retrieval
+### 3. ☐ Документация setup для Claude Desktop/Code
 
-- [ ] Интеграция LanceDB в crates/retrieval.
-- [ ] Embedding generation через Ollama (nomic-embed-text или similar).
-- [ ] Hybrid retrieval: vector similarity + graph traversal.
+- [ ] Финализировать README секцию "Usage with Claude" (частично сделана).
+- [ ] Пример конфига для Claude Desktop (`claude_desktop_config.json`).
+- [ ] Пример конфига для Claude Code (`.claude/settings.json`).
 
-### 4. ☐ MCP Server (ADR-010)
+### 4. ☐ GUI — визуальная проверка на реальных данных
 
-- [ ] Реализовать MCP protocol handler в crates/gateway.
-- [ ] Expose memory layers через MCP tools.
-- [ ] Тестирование с Claude Desktop / Claude Code.
-
-### 5. ☐ CI improvements
-
-- [ ] Добавить caching для Cargo build в GitHub Actions.
-- [ ] Добавить badge в README.
+- [ ] Запустить `run.bat dev`, убедиться что UI рендерится с реальными данными.
+- [ ] Проверить все панели: Stats, Facts, Events, Tokens.
+- [ ] Исправить визуальные баги если есть.
 
 ---
 
 ## Если ты только что открыл этот файл
 
-- MVP M1 (Bootstrap) и M2 (Memory layers) полностью реализованы.
-- GitHub repo: `dvgmdvgm/CMOS4LLM`, CI настроен.
-- Следующий шаг — M3 (Two-LLM economy): runtime inference + context assembly.
-- Memory layers работают изолированно, но ещё не интегрированы с CLI.
+- MVP M1–M5 полностью реализованы.
+- Token Analytics инструментирован в MCP gateway (assemble_context записывает в SQLite).
+- GUI skeleton: Tauri + React + Zustand + Tailwind v4. Sidebar (projects) + tabs (Stats, Facts, Events, Tokens).
+- 95 тестов проходят, CI green, clippy 0 warnings.
+- MCP transport: newline-delimited JSON.
+- GUI работает in-process (без daemon) — Tauri commands вызывают cmos-memory/cmos-retrieval напрямую.
+- **Portable:** данные в `data/` в корне проекта (env var `CMOS_DATA_DIR`). Никаких AppData зависимостей.
+- **run.bat** — one-click build & launch, автоустановка всех зависимостей включая WebView2.
 
 ---
 

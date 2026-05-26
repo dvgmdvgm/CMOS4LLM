@@ -71,7 +71,84 @@ cmos/
 
 ## Текущая фаза
 
-**Documentation phase.** Архитектура согласована, реализация ещё не начата. См. STATUS.md.
+**MVP implementation — ~80% done.** Milestones 1–4 закрыты (bootstrap, memory layers, two-LLM economy, vector index + MCP hybrid assembly). 95 тестов проходят. См. STATUS.md.
+
+---
+
+## Quick Start — как проверить, что CMOS работает
+
+### Предварительные требования
+
+- Rust toolchain (rustup + cargo)
+- Ollama (для embedding-модели, опционально для базового теста)
+
+### 1. Собрать проект
+
+```bash
+cargo build --workspace
+```
+
+### 2. Запустить тесты
+
+```bash
+cargo test --workspace
+```
+
+Ожидаемый результат: 95 тестов проходят, включая 2 end-to-end MCP теста.
+
+### 3. Проверить MCP server вручную
+
+Запустить сервер:
+```bash
+cargo run -p cmos-cli -- mcp --root ./test-project
+```
+
+Сервер слушает stdin/stdout (JSON-RPC, newline-delimited JSON). Отправить initialize:
+```json
+{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"manual-test","version":"0.1.0"}}}
+```
+
+Ожидаемый ответ: JSON с `serverInfo.name = "cmos"` и 6 tools в capabilities.
+
+### 4. Подключить к Claude Desktop / Claude Code
+
+Добавить в конфиг MCP серверов (Claude Desktop: `claude_desktop_config.json`, Claude Code: `.claude/settings.json`):
+
+```json
+{
+  "mcpServers": {
+    "cmos": {
+      "command": "path/to/cmos-cli.exe",
+      "args": ["mcp", "--root", "path/to/your/project"]
+    }
+  }
+}
+```
+
+После подключения Claude получит доступ к 6 инструментам:
+- `cmos_write_memory` — записать факт в L1 (рабочая память)
+- `cmos_read_memory` — прочитать слот из L1
+- `cmos_query_memory` — запросить L2/L3 эпизоды или L4 факты
+- `cmos_assemble_context` — собрать оптимизированный контекст для задачи
+- `cmos_search_similar` — семантический поиск (требует Ollama)
+- `cmos_memory_stats` — статистика по всем уровням памяти
+
+### 5. Bootstrap проекта (заполнить память)
+
+```bash
+cargo run -p cmos-cli -- bootstrap --root path/to/your/project --project-id my-project
+```
+
+Это сканирует git history, структуру файлов, и заполняет L2/L3/L4 память.
+
+### 6. Проверить, что память работает
+
+После bootstrap:
+```bash
+cargo run -p cmos-cli -- query --root path/to/your/project --project-id my-project --layer L4
+```
+
+Должны появиться извлечённые факты о проекте (conventions, decisions, policies).
 
 ---
 
