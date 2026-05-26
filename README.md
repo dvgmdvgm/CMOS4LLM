@@ -1,5 +1,7 @@
 # CMOS — Cognitive Memory Operating System
 
+[![CI](https://github.com/dvgmdvgm/CMOS4LLM/actions/workflows/ci.yml/badge.svg)](https://github.com/dvgmdvgm/CMOS4LLM/actions/workflows/ci.yml)
+
 **Внешний когнитивный субстрат для LLM.** Слой, который берёт на себя память, идентичность проекта, политики и наблюдаемость, превращая LLM из «собеседника, который всё помнит» в stateless inference engine — чистую функцию `f(context) → tokens`.
 
 Цели в одной строке: **снизить расход облачных токенов в 5–25× на типичных задачах**, дать проекту **постоянную память между сессиями**, и сделать процесс работы LLM **наблюдаемым** через GUI.

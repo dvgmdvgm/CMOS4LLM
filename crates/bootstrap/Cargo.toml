@@ -6,6 +6,7 @@ license.workspace = true
 
 [dependencies]
 cmos-core = { path = "../core" }
+cmos-memory = { path = "../memory" }
 tokio.workspace = true
 serde.workspace = true
 serde_json.workspace = true
@@ -22,3 +23,6 @@ toml = "0.8"
 indicatif = "0.17"
 walkdir = "2"
 chrono = { version = "0.4", features = ["serde"] }
+
+[dev-dependencies]
+tempfile = "3"

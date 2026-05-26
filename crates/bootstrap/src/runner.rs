@@ -17,8 +17,9 @@ use crate::phases::git_mining::GitMiningPhase;
 use crate::phases::patterns::PatternDetectionPhase;
 use crate::phases::rejected::RejectedApproachesPhase;
 use crate::phases::schema::SchemaExtractionPhase;
-use crate::phases::{Phase, PhaseError};
+use crate::phases::{Phase, PhaseError, PhaseOutput};
 use crate::progress::ProgressReporter;
+use cmos_memory::{EventStore, EventType, Layer, MemoryEvent};
 
 use thiserror::Error;
 
@@ -89,6 +90,9 @@ impl PipelineRunner {
             &self.root_path.to_string_lossy(),
         )?;
 
+        let events_path = self.root_path.join(".cmos").join("events.db");
+        let event_store = EventStore::open(&events_path).ok();
+
         let inference = self.create_inference_backend(&config);
         let progress = ProgressReporter::new(8);
 
@@ -98,6 +102,7 @@ impl PipelineRunner {
             graph,
             inference,
             progress,
+            event_store,
         };
 
         let last_completed = if self.resume {
@@ -157,6 +162,10 @@ impl PipelineRunner {
                         Some(&stats.to_string()),
                     )?;
 
+                    self.emit_phase_event(
+                        &ctx, phase.id().name(), &started_at, &output,
+                    );
+
                     for warning in &output.warnings {
                         ctx.progress.phase_warning(warning);
                     }
@@ -202,6 +211,42 @@ impl PipelineRunner {
         ctx.progress.summary(total_nodes as usize, total_edges as usize);
 
         Ok(())
+    }
+
+    fn emit_phase_event(
+        &self,
+        ctx: &PipelineContext,
+        phase_name: &str,
+        timestamp: &str,
+        output: &PhaseOutput,
+    ) {
+        let Some(ref es) = ctx.event_store else { return };
+
+        let event = MemoryEvent {
+            id: None,
+            project_id: self.project_name.clone(),
+            layer: Layer::L2,
+            event_type: EventType::Extraction,
+            entity_id: Some(format!("bootstrap:{}", phase_name)),
+            session_id: Some("bootstrap".to_string()),
+            timestamp: timestamp.to_string(),
+            payload: serde_json::json!({
+                "summary": format!(
+                    "Bootstrap phase '{}': {} nodes, {} edges created",
+                    phase_name, output.nodes_created, output.edges_created
+                ),
+                "phase": phase_name,
+                "nodes_created": output.nodes_created,
+                "edges_created": output.edges_created,
+                "warnings": output.warnings.len(),
+            }),
+            access_count: 0,
+            importance: 0.6,
+        };
+
+        if let Err(e) = es.append(&event) {
+            tracing::warn!("failed to emit bootstrap event: {}", e);
+        }
     }
 
     fn create_inference_backend(&self, config: &ProjectConfig) -> Arc<dyn InferenceBackend> {
