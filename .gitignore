@@ -38,6 +38,7 @@ credentials.json
 
 # CMOS runtime data (not committed)
 .cmos/
+data/
 
 # Models (too large for git)
 models/

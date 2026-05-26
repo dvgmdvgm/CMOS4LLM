@@ -507,7 +507,7 @@ fn main() {
                     let embed_client = EmbeddingClient::new(embed_config.clone());
                     let dimension = embed_client.dimension();
 
-                    let mut index = match VectorIndex::open(&vector_path, dimension) {
+                    let index = match VectorIndex::open(&vector_path, dimension) {
                         Ok(i) => i,
                         Err(e) => {
                             eprintln!("ERROR: cannot open vector index: {}", e);

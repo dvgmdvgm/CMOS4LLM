@@ -27,6 +27,11 @@ echo   CMOS - Cognitive Memory Operating System
 echo ============================================================
 echo.
 
+REM === Ensure cargo is in PATH (common issue on fresh shells) ===
+if exist "%USERPROFILE%\.cargo\bin\cargo.exe" (
+    set "PATH=%USERPROFILE%\.cargo\bin;%PATH%"
+)
+
 REM === STEP 0: Check Visual Studio Build Tools (MSVC linker) ===
 set "VCVARS="
 call :find_vcvars
@@ -54,6 +59,39 @@ if not defined VCVARS (
 REM Load MSVC environment
 echo [setup] Loading MSVC environment...
 call "%VCVARS%" x64 >nul 2>&1
+
+REM === STEP 0.5: Check WebView2 Runtime ===
+set "WV2_FOUND=0"
+reg query "HKLM\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BEE-13A6279FE7FF}" /v pv >nul 2>&1
+if not errorlevel 1 set "WV2_FOUND=1"
+if "%WV2_FOUND%"=="0" (
+    reg query "HKLM\SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BEE-13A6279FE7FF}" /v pv >nul 2>&1
+    if not errorlevel 1 set "WV2_FOUND=1"
+)
+if "%WV2_FOUND%"=="0" (
+    echo [setup] WebView2 Runtime not found. Installing...
+    echo.
+
+    powershell -Command "Invoke-WebRequest -Uri 'https://go.microsoft.com/fwlink/p/?LinkId=2124703' -OutFile '%TEMP%\MicrosoftEdgeWebview2Setup.exe'"
+    if errorlevel 1 (
+        echo [setup] ERROR: Failed to download WebView2 bootstrapper.
+        echo [setup] Please install manually: https://developer.microsoft.com/en-us/microsoft-edge/webview2/
+        goto :fail
+    )
+
+    "%TEMP%\MicrosoftEdgeWebview2Setup.exe" /silent /install
+    if errorlevel 1 (
+        echo [setup] ERROR: WebView2 installation failed.
+        echo [setup] Please install manually: https://developer.microsoft.com/en-us/microsoft-edge/webview2/
+        goto :fail
+    )
+
+    del /q "%TEMP%\MicrosoftEdgeWebview2Setup.exe" >nul 2>&1
+    echo [setup] WebView2 Runtime installed successfully.
+    echo.
+) else (
+    echo [check] WebView2 Runtime found
+)
 
 REM === STEP 1: Check Rust ===
 where rustc >nul 2>&1
@@ -140,30 +178,30 @@ if errorlevel 1 (
 )
 
 REM === STEP 5: Install frontend dependencies ===
-if not exist "apps\desktop\node_modules" (
-    echo [setup] Installing frontend dependencies...
-    echo.
-
-    pushd apps\desktop
+echo [setup] Syncing frontend dependencies...
+pushd apps\desktop
+call pnpm install --frozen-lockfile >nul 2>&1
+if errorlevel 1 (
+    echo [setup] Lockfile out of date, running full install...
     call pnpm install
     if errorlevel 1 (
         echo [setup] ERROR: Frontend dependency installation failed.
         popd
         goto :fail
     )
-    popd
-
-    echo [setup] Frontend dependencies installed.
-    echo.
-) else (
-    echo [check] Frontend dependencies present
 )
+popd
+echo [check] Frontend dependencies synced
 
 echo.
 echo ============================================================
 echo   All dependencies OK. Ready to build.
 echo ============================================================
 echo.
+
+REM === Portable data: store all CMOS data inside the project folder ===
+set "CMOS_DATA_DIR=%~dp0data"
+if not exist "%CMOS_DATA_DIR%" mkdir "%CMOS_DATA_DIR%"
 
 REM === BUILD MODE SELECTION ===
 set "MODE=%~1"
@@ -226,7 +264,13 @@ if errorlevel 1 (
 )
 echo.
 echo [build] Release build complete.
-echo [build] Installer/bundle available in target\release\bundle\
+set "EXE=%~dp0target\release\cmos-desktop.exe"
+if exist "%EXE%" (
+    echo [run] Launching %EXE%
+    start "" "%EXE%"
+) else (
+    echo [build] Installer available in target\release\bundle\
+)
 goto :done
 
 :done

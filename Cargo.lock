@@ -615,10 +615,14 @@ name = "cmos-desktop"
 version = "0.1.0"
 dependencies = [
  "cmos-core",
+ "cmos-memory",
+ "cmos-retrieval",
+ "rusqlite",
  "serde",
  "serde_json",
  "tauri",
  "tauri-build",
+ "tokio",
  "tracing",
  "tracing-subscriber",
 ]
@@ -631,9 +635,11 @@ dependencies = [
  "chrono",
  "cmos-memory",
  "cmos-retrieval",
+ "rusqlite",
  "rust-mcp-sdk",
  "serde",
  "serde_json",
+ "tempfile",
  "thiserror 2.0.18",
  "tokio",
  "tracing",
