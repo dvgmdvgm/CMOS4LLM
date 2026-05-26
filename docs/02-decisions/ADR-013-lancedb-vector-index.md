@@ -1,6 +1,6 @@
 # ADR-013: LanceDB as the vector index for L3/L4
 
-- **Status:** Accepted
+- **Status:** Superseded by ADR-017
 - **Date:** 2026-05-26
 - **Decision-makers:** owner, claude
 - **Related:** ADR-002, ADR-011, ADR-012

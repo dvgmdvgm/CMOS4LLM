@@ -7,7 +7,12 @@ license.workspace = true
 [dependencies]
 cmos-core = { path = "../core" }
 cmos-bootstrap = { path = "../bootstrap" }
+cmos-memory = { path = "../memory" }
+cmos-retrieval = { path = "../retrieval" }
+cmos-gateway = { path = "../gateway" }
+cmos-sub-lm = { path = "../sub-lm" }
 tokio.workspace = true
+serde_json.workspace = true
 clap = { version = "4", features = ["derive"] }
 tracing.workspace = true
 tracing-subscriber.workspace = true
