@@ -5,7 +5,12 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
+cmos-core = { path = "../core" }
 tokio.workspace = true
 serde.workspace = true
+serde_json.workspace = true
 tracing.workspace = true
 thiserror.workspace = true
+reqwest.workspace = true
+async-trait.workspace = true
+chrono.workspace = true
