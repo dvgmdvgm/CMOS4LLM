@@ -1,0 +1,24 @@
+[package]
+name = "cmos-bootstrap"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+cmos-core = { path = "../core" }
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+
+tree-sitter = "0.24"
+tree-sitter-python = "0.23"
+rusqlite = { version = "0.32", features = ["bundled"] }
+git2 = "0.19"
+reqwest = { version = "0.12", features = ["json"] }
+async-trait = "0.1"
+toml = "0.8"
+indicatif = "0.17"
+walkdir = "2"
+chrono = { version = "0.4", features = ["serde"] }

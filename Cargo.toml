@@ -7,6 +7,7 @@ members = [
     "crates/gateway",
     "crates/policy",
     "crates/retrieval",
+    "crates/bootstrap",
     "crates/cli",
     "apps/desktop/src-tauri",
 ]
