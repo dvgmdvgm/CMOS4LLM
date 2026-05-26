@@ -9,17 +9,16 @@
 
 ## Очередь работы (в порядке выполнения)
 
-### 1. ☐ Scaffold Cargo workspace + Tauri app
+### 1. ☐ Git commit scaffold
 
-- [ ] Создать `Cargo.toml` (workspace) с crates: `core`, `memory`, `sub-lm`, `gateway`, `policy`, `retrieval`, `cli`.
-- [ ] Создать `apps/desktop/` с Tauri 2.x scaffold (React + TypeScript + Vite).
-- [ ] Минимальный `Hello World` — daemon запускается, Tauri окно открывается.
-- [ ] `.cargo/config.toml` для Windows-специфичных настроек (linker, target).
+- [ ] `git add` всех новых файлов (crates, apps, run.bat, .cargo).
+- [ ] Commit: "feat: scaffold Cargo workspace + Tauri desktop app".
+- [ ] Создать GitHub repo и push (если owner готов).
 
 ### 2. ☐ CI pipeline (GitHub Actions)
 
 - [ ] `cargo clippy` + `cargo test` + `cargo build --release` на Windows runner.
-- [ ] Frontend: `npm ci` + `npm run lint` + `npm run build`.
+- [ ] Frontend: `pnpm install` + `pnpm build`.
 - [ ] Создать GitHub repo и push.
 
 ### 3. ☐ MVP Milestone 1: Bootstrap pipeline для Django marketplace
@@ -47,9 +46,10 @@
 
 ## Если ты только что открыл этот файл
 
-- Документация завершена на 100%. Все ADR приняты. Стек зафиксирован.
-- Следующий шаг — **код**. Начинаем с scaffold (пункт 1).
-- Открытые вопросы в [ROADBLOCKS.md](./ROADBLOCKS.md) не блокируют начало имплементации (Q1 про GPU решится при первом запуске Sub-LM).
+- Scaffold готов и проверен. Все crates компилируются, Tauri app собирается и запускается.
+- `run.bat` автоматически ставит все зависимости на чистой машине.
+- Следующий шаг — **git commit** (пункт 1), затем CI или сразу bootstrap pipeline.
+- Открытые вопросы в [ROADBLOCKS.md](./ROADBLOCKS.md) не блокируют текущую работу.
 
 ---
 

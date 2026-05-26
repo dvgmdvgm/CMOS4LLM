@@ -1,0 +1,12 @@
+[package]
+name = "cmos-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+cmos-core = { path = "../core" }
+tokio.workspace = true
+clap = { version = "4", features = ["derive"] }
+tracing.workspace = true
+tracing-subscriber.workspace = true
