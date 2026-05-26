@@ -6,37 +6,39 @@
 ---
 
 **Дата последнего обновления:** 2026-05-26
-**Текущая фаза:** MVP implementation — scaffold complete (~5% MVP)
+**Текущая фаза:** MVP implementation — Milestone 1 complete (~15% MVP)
 **Кто работал:** owner + Opus 4.6
 
 ---
 
 ## Что сделано в последнюю сессию
 
-1. **Scaffold Cargo workspace** — `Cargo.toml` (workspace), 7 crates: `core`, `memory`, `sub-lm`, `gateway`, `policy`, `retrieval`, `cli`. Все компилируются.
-2. **Tauri 2.x desktop app** — `apps/desktop/` с React 19 + TypeScript + Vite + pnpm. Окно открывается, показывает "CMOS Cognitive Console".
-3. **CLI binary** — `cmos-cli hello` выводит версию и статус daemon.
-4. **`run.bat` с auto-provisioning** — проверяет/ставит VS Build Tools, Rust, Node, pnpm, Tauri CLI, frontend deps. Один скрипт для чистой машины.
-5. **Установлены VS Build Tools 2022** — были отсутствующие, ключевая зависимость для MSVC linker на Windows.
-6. **Исправлен баг с em-dash в bat-файле** — non-ASCII символы ломали cmd.exe парсер.
+1. **MVP Milestone 1: Bootstrap pipeline** — полная реализация 8-фазного pipeline для онбординга проектов в L4 knowledge graph. Crate `cmos-bootstrap` (27 файлов, ~3800 строк Rust).
+2. **Верифицировано на реальном Django-проекте** (224 Python файла, `D:\art_network_antigravity`): 4956 nodes, 45 edges, 43 git hotspots. Статические фазы завершаются за ~25 секунд.
+3. **CLI команды** — `cmos bootstrap`, `cmos graph stats`, `cmos graph query` работают.
+4. **Design spec** — `docs/superpowers/specs/2026-05-26-bootstrap-pipeline-design.md` закоммичен.
 
 ## Что НЕ сделано (ждёт следующей сессии)
 
+- LM-фазы (4, 6, 7) не тестировались с Ollama (Ollama не был запущен в момент тестирования).
+- Unit tests / integration tests (pipeline работает, но формальных тестов нет).
 - CI pipeline (GitHub Actions).
-- MVP Milestone 1: Bootstrap pipeline.
-- Git commit scaffold'а (owner не дал команду).
+- MVP Milestone 2: Memory layers L1–L4.
 
 ## Где мы в roadmap
 
 - **Documentation phase:** 100% ✓
-- **MVP implementation:** ~5%. Scaffold готов, первый исполнимый код работает. Следующий шаг — CI или Bootstrap pipeline.
+- **MVP Milestone 1 (Bootstrap):** 100% ✓ — pipeline работает на реальном проекте.
+- **MVP Milestone 2 (Memory layers):** 0% — следующий шаг.
+- **MVP implementation overall:** ~15%.
 
 ## Ключевые контекстные факты
 
-- Owner часто переустанавливает систему / работает за разными машинами — поэтому `run.bat` с auto-provisioning критичен.
-- Git for Windows кладёт свой `link.exe` в PATH, перехватывая MSVC linker — `run.bat` решает это через `vcvarsall.bat x64`.
-- Bat-файлы на Windows не должны содержать non-ASCII символов (em-dash, кириллица в REM) — cmd.exe ломается.
-- pnpm требует `pnpm approve-builds` для esbuild при первой установке.
+- Owner использует Ollama с Gemma2 для Sub-LM задач.
+- Django-проект для тестирования: `D:\art_network_antigravity` (Scenica — marketplace для артистов).
+- Bootstrap создаёт `.cmos/config.toml` и `.cmos/graph.db` в корне target project.
+- Классификатор Django: models, views, admins, serializers, forms, middleware, signals, consumers, management commands.
+- InferenceBackend trait: OllamaBackend + ApiBackend + MockBackend.
 
 ---
 

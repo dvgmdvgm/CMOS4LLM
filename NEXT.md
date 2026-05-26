@@ -9,47 +9,48 @@
 
 ## Очередь работы (в порядке выполнения)
 
-### 1. ☐ Git commit scaffold
+### 1. ☐ Тестирование LM-фаз с Ollama
 
-- [ ] `git add` всех новых файлов (crates, apps, run.bat, .cargo).
-- [ ] Commit: "feat: scaffold Cargo workspace + Tauri desktop app".
-- [ ] Создать GitHub repo и push (если owner готов).
+- [ ] Запустить Ollama, убедиться что Gemma2 доступна.
+- [ ] Перезапустить bootstrap без `--skip-phases`: `cmos bootstrap --project marketplace --root D:\art_network_antigravity --no-interactive --resume`.
+- [ ] Проверить что фазы 4 (Convention Mining), 6 (Rejected Approaches), 7 (Docs Ingestion) отрабатывают.
+- [ ] Проверить качество LM-ответов (conventions, tech debt markers, doc facts).
 
-### 2. ☐ CI pipeline (GitHub Actions)
+### 2. ☐ Unit tests для bootstrap pipeline
+
+- [ ] Создать `crates/bootstrap/tests/fixtures/` с синтетическими Django-файлами.
+- [ ] Unit tests для PythonExtractor (parse_file → correct RawNodes).
+- [ ] Unit tests для DjangoExtractor (classify_node → correct kinds).
+- [ ] Unit tests для GraphStore (insert/query/checkpoint).
+- [ ] Integration test: full pipeline на mini-Django fixture.
+
+### 3. ☐ CI pipeline (GitHub Actions)
 
 - [ ] `cargo clippy` + `cargo test` + `cargo build --release` на Windows runner.
 - [ ] Frontend: `pnpm install` + `pnpm build`.
 - [ ] Создать GitHub repo и push.
 
-### 3. ☐ MVP Milestone 1: Bootstrap pipeline для Django marketplace
-
-Первый исполнимый код: статический анализ Django-проекта → построение L4 symbol graph + domain ontology.
-- [ ] Python AST parser (вызывается из Rust через `tree-sitter-python` или subprocess).
-- [ ] Django-specific extractors (models, views, urls, signals).
-- [ ] SQLite schema для L4 graph (nodes + edges tables).
-- [ ] CLI: `cmos bootstrap --project marketplace --root <path>`.
-
 ### 4. ☐ MVP Milestone 2: Memory layers L1–L4
 
 - [ ] L1: in-memory prompt assembly buffer.
 - [ ] L2/L3: SQLite WAL event store (schema из ADR-016).
-- [ ] L4: SQLite graph (schema из ADR-012) + LanceDB vectors.
+- [ ] L4: интеграция с существующим GraphStore из bootstrap.
 - [ ] Promotion logic L2→L3, L3→L4.
 
 ### 5. ☐ MVP Milestone 3: Two-LLM economy
 
-- [ ] llama-cpp-2 integration: load GGUF model, run classification task.
+- [ ] Интеграция Ollama для runtime inference (не только bootstrap).
 - [ ] Background task queue (tokio channels).
-- [ ] Fallback to Haiku API when no GPU.
+- [ ] Context assembly: retrieval из L4 graph → prompt для Cloud LLM.
 
 ---
 
 ## Если ты только что открыл этот файл
 
-- Scaffold готов и проверен. Все crates компилируются, Tauri app собирается и запускается.
-- `run.bat` автоматически ставит все зависимости на чистой машине.
-- Следующий шаг — **git commit** (пункт 1), затем CI или сразу bootstrap pipeline.
-- Открытые вопросы в [ROADBLOCKS.md](./ROADBLOCKS.md) не блокируют текущую работу.
+- MVP M1 (Bootstrap pipeline) полностью реализован и работает.
+- Pipeline извлекает ~5000 nodes из реального Django-проекта за 25 секунд.
+- LM-фазы (Ollama) ещё не тестировались — нужно запустить Ollama.
+- Следующий шаг — тесты или сразу M2 (memory layers).
 
 ---
 
