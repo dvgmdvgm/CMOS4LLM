@@ -53,7 +53,11 @@ impl Phase for DocsIngestionPhase {
             }
 
             let truncated = if content.len() > 4000 {
-                &content[..4000]
+                let mut end = 4000;
+                while !content.is_char_boundary(end) {
+                    end -= 1;
+                }
+                &content[..end]
             } else {
                 &content
             };
