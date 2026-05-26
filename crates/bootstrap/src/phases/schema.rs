@@ -48,8 +48,6 @@ impl Phase for SchemaExtractionPhase {
                 if let Some(ref target) = field.relation_target {
                     let edge_kind = if field.field_type.contains("ManyToMany") {
                         "m2m_to"
-                    } else if field.field_type.contains("OneToOne") {
-                        "fk_to"
                     } else {
                         "fk_to"
                     };

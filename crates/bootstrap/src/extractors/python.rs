@@ -138,12 +138,11 @@ impl PythonExtractor {
         if let Some(arg_list) = class_node.child_by_field_name("superclasses") {
             let count = arg_list.child_count();
             for i in 0..count {
-                if let Some(child) = arg_list.child(i) {
-                    if child.kind() != "(" && child.kind() != ")" && child.kind() != "," {
-                        if let Ok(text) = child.utf8_text(source) {
-                            bases.push(text.trim().to_string());
-                        }
-                    }
+                if let Some(child) = arg_list.child(i)
+                    && child.kind() != "(" && child.kind() != ")" && child.kind() != ","
+                    && let Ok(text) = child.utf8_text(source)
+                {
+                    bases.push(text.trim().to_string());
                 }
             }
         }
@@ -154,12 +153,11 @@ impl PythonExtractor {
         let mut decorators = Vec::new();
         let count = decorated_node.child_count();
         for i in 0..count {
-            if let Some(child) = decorated_node.child(i) {
-                if child.kind() == "decorator" {
-                    if let Ok(text) = child.utf8_text(source) {
-                        decorators.push(text.trim_start_matches('@').trim().to_string());
-                    }
-                }
+            if let Some(child) = decorated_node.child(i)
+                && child.kind() == "decorator"
+                && let Ok(text) = child.utf8_text(source)
+            {
+                decorators.push(text.trim_start_matches('@').trim().to_string());
             }
         }
         decorators

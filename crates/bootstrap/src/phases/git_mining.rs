@@ -60,7 +60,7 @@ impl Phase for GitMiningPhase {
                     if let Some(path) = delta.new_file().path() {
                         let path_str = path.to_string_lossy().replace('\\', "/");
                         if path_str.ends_with(".py") {
-                            let entry = file_stats.entry(path_str).or_insert_with(FileStats::default);
+                            let entry = file_stats.entry(path_str).or_default();
                             entry.change_count += 1;
                         }
                     }
@@ -75,7 +75,7 @@ impl Phase for GitMiningPhase {
         let mut hotspots: Vec<_> = file_stats.iter()
             .filter(|(_, stats)| stats.change_count > 5)
             .collect();
-        hotspots.sort_by(|a, b| b.1.change_count.cmp(&a.1.change_count));
+        hotspots.sort_by_key(|b| std::cmp::Reverse(b.1.change_count));
 
         for (path, stats) in hotspots.iter().take(50) {
             let existing_nodes = ctx.graph.query_nodes_by_file(&ctx.config.project.name, path)?;

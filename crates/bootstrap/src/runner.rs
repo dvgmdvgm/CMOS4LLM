@@ -120,10 +120,10 @@ impl PipelineRunner {
         for phase in &phases {
             let phase_id = phase.id().as_u8();
 
-            if let Some(last) = last_completed {
-                if phase_id <= last {
-                    continue;
-                }
+            if let Some(last) = last_completed
+                && phase_id <= last
+            {
+                continue;
             }
 
             if ctx.config.bootstrap.skip_phases.contains(&phase_id) {

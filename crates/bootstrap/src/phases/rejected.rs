@@ -31,7 +31,7 @@ impl Phase for RejectedApproachesPhase {
                     && name != "migrations"
             })
             .filter_map(|e| e.ok())
-            .filter(|e| e.path().extension().map_or(false, |ext| ext == "py"))
+            .filter(|e| e.path().extension().is_some_and(|ext| ext == "py"))
             .collect();
 
         for entry in &py_files {
@@ -101,7 +101,7 @@ impl Phase for RejectedApproachesPhase {
                 }
                 Err(_) => {
                     let rt = tokio::runtime::Runtime::new()
-                        .map_err(|e| PhaseError::Io(std::io::Error::new(std::io::ErrorKind::Other, e)))?;
+                        .map_err(|e| PhaseError::Io(std::io::Error::other(e)))?;
                     rt.block_on(ctx.inference.complete(CompletionRequest {
                         system_prompt: system.to_string(),
                         user_prompt: batch_text,

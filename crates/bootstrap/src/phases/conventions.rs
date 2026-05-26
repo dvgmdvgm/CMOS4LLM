@@ -58,7 +58,7 @@ impl Phase for ConventionMiningPhase {
             }
             Err(_) => {
                 let rt = tokio::runtime::Runtime::new()
-                    .map_err(|e| PhaseError::Io(std::io::Error::new(std::io::ErrorKind::Other, e)))?;
+                    .map_err(|e| PhaseError::Io(std::io::Error::other(e)))?;
                 rt.block_on(ctx.inference.complete(CompletionRequest {
                     system_prompt: system.to_string(),
                     user_prompt: prompt,
@@ -114,10 +114,10 @@ impl Phase for ConventionMiningPhase {
 
 fn extract_json_array(text: &str) -> &str {
     let trimmed = text.trim();
-    if let Some(start) = trimmed.find('[') {
-        if let Some(end) = trimmed.rfind(']') {
-            return &trimmed[start..=end];
-        }
+    if let Some(start) = trimmed.find('[')
+        && let Some(end) = trimmed.rfind(']')
+    {
+        return &trimmed[start..=end];
     }
     trimmed
 }

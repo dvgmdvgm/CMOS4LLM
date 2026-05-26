@@ -5,6 +5,12 @@ use super::{ExtractorError, RawNode};
 
 pub struct DjangoExtractor;
 
+impl Default for DjangoExtractor {
+    fn default() -> Self {
+        Self
+    }
+}
+
 impl DjangoExtractor {
     pub fn new() -> Self {
         Self
@@ -182,11 +188,11 @@ impl DjangoExtractor {
             ))?;
 
         let mut fields = Vec::new();
-        self.visit_for_fields(tree.root_node(), source, file_path, &mut fields);
+        self.visit_for_fields(tree.root_node(), source, &mut fields);
         Ok(fields)
     }
 
-    fn visit_for_fields(&self, node: TsNode, source: &[u8], file_path: &Path, out: &mut Vec<ModelFieldInfo>) {
+    fn visit_for_fields(&self, node: TsNode, source: &[u8], out: &mut Vec<ModelFieldInfo>) {
         if node.kind() == "class_definition" {
             let class_name = node.child_by_field_name("name")
                 .and_then(|n| n.utf8_text(source).ok())
@@ -201,7 +207,7 @@ impl DjangoExtractor {
         let count = node.child_count();
         for i in 0..count {
             if let Some(child) = node.child(i) {
-                self.visit_for_fields(child, source, file_path, out);
+                self.visit_for_fields(child, source, out);
             }
         }
     }
@@ -211,12 +217,11 @@ impl DjangoExtractor {
         if let Some(arg_list) = class_node.child_by_field_name("superclasses") {
             let count = arg_list.child_count();
             for i in 0..count {
-                if let Some(child) = arg_list.child(i) {
-                    if child.kind() != "(" && child.kind() != ")" && child.kind() != "," {
-                        if let Ok(text) = child.utf8_text(source) {
-                            bases.push(text.trim().to_string());
-                        }
-                    }
+                if let Some(child) = arg_list.child(i)
+                    && child.kind() != "(" && child.kind() != ")" && child.kind() != ","
+                    && let Ok(text) = child.utf8_text(source)
+                {
+                    bases.push(text.trim().to_string());
                 }
             }
         }
@@ -227,16 +232,13 @@ impl DjangoExtractor {
         if let Some(body) = class_node.child_by_field_name("body") {
             let count = body.child_count();
             for i in 0..count {
-                if let Some(child) = body.child(i) {
-                    if child.kind() == "expression_statement" {
-                        if let Some(assignment) = child.child(0) {
-                            if assignment.kind() == "assignment" {
-                                if let Some(field_info) = self.parse_field_assignment(assignment, source, class_name) {
-                                    out.push(field_info);
-                                }
-                            }
-                        }
-                    }
+                if let Some(child) = body.child(i)
+                    && child.kind() == "expression_statement"
+                    && let Some(assignment) = child.child(0)
+                    && assignment.kind() == "assignment"
+                    && let Some(field_info) = self.parse_field_assignment(assignment, source, class_name)
+                {
+                    out.push(field_info);
                 }
             }
         }
@@ -304,21 +306,21 @@ impl DjangoExtractor {
 
         for (line_num, line) in content.lines().enumerate() {
             let trimmed = line.trim();
-            if trimmed.contains("path(") || trimmed.contains("re_path(") || trimmed.contains("url(") {
-                if let Some(url_info) = self.parse_url_line(trimmed) {
-                    urls.push(RawNode {
-                        kind: "django_url".into(),
-                        label: url_info.pattern.clone(),
-                        file_path: file_str.clone(),
-                        line_start: line_num as u32 + 1,
-                        line_end: line_num as u32 + 1,
-                        properties: serde_json::json!({
-                            "pattern": url_info.pattern,
-                            "view": url_info.view_name,
-                            "name": url_info.name,
-                        }),
-                    });
-                }
+            if (trimmed.contains("path(") || trimmed.contains("re_path(") || trimmed.contains("url("))
+                && let Some(url_info) = self.parse_url_line(trimmed)
+            {
+                urls.push(RawNode {
+                    kind: "django_url".into(),
+                    label: url_info.pattern.clone(),
+                    file_path: file_str.clone(),
+                    line_start: line_num as u32 + 1,
+                    line_end: line_num as u32 + 1,
+                    properties: serde_json::json!({
+                        "pattern": url_info.pattern,
+                        "view": url_info.view_name,
+                        "name": url_info.name,
+                    }),
+                });
             }
         }
 
@@ -342,13 +344,11 @@ impl DjangoExtractor {
             .map(|v| v.trim().trim_end_matches(')').trim().to_string())
             .unwrap_or_default();
 
-        let name = if let Some(name_part) = args_str.split("name=").nth(1) {
-            Some(name_part.trim()
+        let name = args_str.split("name=").nth(1).map(|name_part| {
+            name_part.trim()
                 .trim_matches(|c| c == '\'' || c == '"' || c == ')' || c == ',')
-                .to_string())
-        } else {
-            None
-        };
+                .to_string()
+        });
 
         Some(UrlInfo { pattern, view_name, name })
     }
